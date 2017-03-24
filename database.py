@@ -23,22 +23,36 @@ class Content(Base):
     def __repr__(self):
         return "<Content(playlist_id='%s', song_name='%s', order='%s')>" % (self.playlist_id, self.song_name, self.order)
 
-# TODO get_playlists()
-    # returns a map of playlist ids to playlist name 
+class PlaylistDB:
 
-# TODO get_songs_from_playlist(playlist_id)
-    # returns a list of song names
+    def __init__(self, engine):
+        self.engine = engine
+        self.Session = sessionmaker(bind=engine)
 
-# TODO create_playlist(playlist_name)
-    # returns id of the playlist created
+    def get_playlists(self):
+        # returns a map of playlist ids to playlist name
+        session = self.Session()
+        result = dict()
 
-# TODO delete_playlist(playlist_id)
+        for playlist in session.query(Playlist):
+            result[playlist.id] = playlist.name
 
-# TODO update_playlist_name(playlist_id, name)
+        session.close()
+        return result
 
-# TODO add_song_to_playlist(playlist_id, song_name)
+    # TODO get_songs_from_playlist(playlist_id)
+        # returns a list of song names
 
-# TODO delete_song_from_playlist(index)
+    # TODO create_playlist(playlist_name)
+        # returns id of the playlist created
 
-# TODO reorder_songs_in_playlist(playlist_id, old_index, new_index)
-    # moves song at old index to the new index and shifts the rest of the songs down
+    # TODO delete_playlist(playlist_id)
+
+    # TODO update_playlist_name(playlist_id, name)
+
+    # TODO add_song_to_playlist(playlist_id, song_name)
+
+    # TODO delete_song_from_playlist(index)
+
+    # TODO reorder_songs_in_playlist(playlist_id, old_index, new_index)
+        # moves song at old index to the new index and shifts the rest of the songs down
