@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -42,8 +42,13 @@ class PlaylistDB:
         session.close()
         return result
 
-    # TODO get_songs_from_playlist(playlist_id)
+    def get_songs_from_playlist(self, playlist_id):
         # returns a list of song names
+        session = self.Session()
+        result = session.query(Content).filter_by(playlist_id=playlist_id).\
+            order_by(Content.order).all()
+        session.close()
+        return [row.song_name for row in result]
 
     def create_playlist(self, playlist_name):
         # returns id of the playlist created
@@ -60,7 +65,22 @@ class PlaylistDB:
 
     # TODO update_playlist_name(playlist_id, name)
 
-    # TODO add_song_to_playlist(playlist_id, song_name)
+    def add_song_to_playlist(self, playlist_id, song_name):
+        session = self.Session()
+        max_order = session.query(func.max(Content.order + 1)).filter_by(playlist_id=playlist_id).scalar()
+        
+        if max_order is None:
+            max_order = 0
+
+        song_to_add = Content(playlist_id=playlist_id, song_name=song_name, order=max_order)
+        session.add(song_to_add)
+
+        try:
+            session.commit()
+        except:
+            session.rollback()
+        finally:
+            session.close()
 
     # TODO delete_song_from_playlist(index)
 
