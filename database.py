@@ -43,8 +43,15 @@ class PlaylistDB:
     # TODO get_songs_from_playlist(playlist_id)
         # returns a list of song names
 
-    # TODO create_playlist(playlist_name)
+    def create_playlist(self, playlist_name):
         # returns id of the playlist created
+        session = self.Session()
+        new_playlist = Playlist(name=playlist_name)
+        session.add(new_playlist)
+        session.commit()
+        session.close()
+        
+        return new_playlist.id
 
     # TODO delete_playlist(playlist_id)
 
