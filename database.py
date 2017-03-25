@@ -2,7 +2,7 @@ from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, func,
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-engine = create_engine('sqlite:///playlists.db', echo=True)
+engine = create_engine('sqlite:///playlists.db')
 Base = declarative_base()
 
 class Playlist(Base):
@@ -25,7 +25,6 @@ class Content(Base):
         return "<Content(playlist_id='%s', song_name='%s', order='%s')>" % (self.playlist_id, self.song_name, self.order)
 
 class PlaylistDB:
-
     def __init__(self, engine):
         self.engine = engine
         self.Session = sessionmaker(bind=engine)
