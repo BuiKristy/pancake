@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, func
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, func, update
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -63,7 +63,12 @@ class PlaylistDB:
 
     # TODO delete_playlist(playlist_id)
 
-    # TODO update_playlist_name(playlist_id, name)
+    def update_playlist_name(self, playlist_id, new_name):
+        session = self.Session()
+        session.query(Playlist).filter(Playlist.id==playlist_id).update({"name": new_name})
+        
+        session.commit()
+        session.close()
 
     def add_song_to_playlist(self, playlist_id, song_name):
         session = self.Session()
