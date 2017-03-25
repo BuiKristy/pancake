@@ -17,7 +17,7 @@ class Playlist(Base):
 class Content(Base):
     __tablename__ = 'contents'
 
-    playlist_id = Column(Integer, ForeignKey('playlists.id'), primary_key=True)
+    playlist_id = Column(Integer, ForeignKey('playlists.id', ondelete='CASCADE'), primary_key=True)
     song_name = Column(String, nullable=False)
     order = Column(Integer, primary_key=True)
 
