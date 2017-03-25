@@ -1,5 +1,6 @@
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 engine = create_engine('sqlite:///playlists.db', echo=True)
 Base = declarative_base()
@@ -28,6 +29,7 @@ class PlaylistDB:
     def __init__(self, engine):
         self.engine = engine
         self.Session = sessionmaker(bind=engine)
+        Base.metadata.create_all(self.engine)
 
     def get_playlists(self):
         # returns a map of playlist ids to playlist name
@@ -49,9 +51,10 @@ class PlaylistDB:
         new_playlist = Playlist(name=playlist_name)
         session.add(new_playlist)
         session.commit()
+        playlist_id = new_playlist.id
         session.close()
-        
-        return new_playlist.id
+
+        return playlist_id
 
     # TODO delete_playlist(playlist_id)
 
