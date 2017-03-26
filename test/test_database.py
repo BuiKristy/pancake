@@ -162,6 +162,14 @@ class TestDatabase(unittest.TestCase):
 
         all_songs = self.test_playlistDB.get_songs_from_playlist(test_playlist1)
         self.assertEqual(all_songs, ["song1", "song2"], "songs should exist")
+    
+    def test_deleting_from_negative_index(self):
+        test_playlist1 = self.test_playlistDB.create_playlist("test1")
+        self.test_playlistDB.add_song_to_playlist(test_playlist1, "song1")
+        self.test_playlistDB.delete_song_from_playlist(test_playlist1, -1)
+
+        all_songs = self.test_playlistDB.get_songs_from_playlist(test_playlist1)
+        self.assertEqual(all_songs, ["song1"], "songs should still exist")
 
     def setUp(self):
         engine = create_engine('sqlite:///:memory:', echo=True)
