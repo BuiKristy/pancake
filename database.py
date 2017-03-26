@@ -1,9 +1,17 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, func, update
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, func, update, event
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.engine import Engine
 
 engine = create_engine('sqlite:///playlists.db')
 Base = declarative_base()
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    print("hello")
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
 
 class Playlist(Base):
     __tablename__ = 'playlists'
@@ -60,7 +68,11 @@ class PlaylistDB:
 
         return playlist_id
 
-    # TODO delete_playlist(playlist_id)
+    def delete_playlist(self, playlist_id):
+        session = self.Session()
+        session.delete(session.query(Playlist).filter(Playlist.id==playlist_id).one())
+        session.commit()
+        session.close()
 
     def update_playlist_name(self, playlist_id, new_name):
         session = self.Session()
