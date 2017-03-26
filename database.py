@@ -70,14 +70,14 @@ class PlaylistDB:
     def delete_playlist(self, playlist_id):
         """ Deletes the playlist matching the given playlist id """
         session = self.Session()
-        session.delete(session.query(Playlist).filter(Playlist.id==playlist_id).one())
+        session.delete(session.query(Playlist).filter(Playlist.id == playlist_id).one())
         session.commit()
         session.close()
 
     def update_playlist_name(self, playlist_id, new_name):
         """ Updates the playlist name given the playlist id and the new name """
         session = self.Session()
-        session.query(Playlist).filter(Playlist.id==playlist_id).update({"name": new_name})
+        session.query(Playlist).filter(Playlist.id == playlist_id).update({"name": new_name})
         
         session.commit()
         session.close()
@@ -103,27 +103,39 @@ class PlaylistDB:
     def delete_song_from_playlist(self, playlist_id, index):
         """ Deletes the song at the given index from the playlist matching the given playlist id """
         session = self.Session()
-        session.delete(session.query(Content).filter(Content.playlist_id==playlist_id, \
-            Content.order==index).one())
-        session.query(Content).filter(Content.order > index, Content.playlist_id==playlist_id).\
-            update({"order": (Content.order - 1)})
-        session.commit()
-        session.close()
+        try:
+            session.delete(session.query(Content).filter(Content.playlist_id == playlist_id, \
+                Content.order == index).one())
+            session.query(Content).filter(Content.order > index, Content.playlist_id == playlist_id).\
+                update({"order": (Content.order - 1)})
+            session.commit()
+        except:
+            session.rollback()
+        finally:
+            session.close()
 
     def reorder_songs_in_playlist(self, playlist_id, old_index, new_index):
         """ Moves the song at the given old index to the new index in the playlist given the playlist id """
         session = self.Session()
-        session.query(Content).filter(Content.order==old_index, Content.playlist_id==playlist_id).\
-            update({"order": -1})
+        song_count = session.query(func.count(Content.order)).filter(Content.playlist_id == playlist_id).scalar()
+        
+        if old_index >= song_count or new_index >= song_count or old_index < 0 or new_index < 0:
+            session.rollback()
+            session.close()
+            return
 
-        if(old_index > new_index):
-            session.query(Content).filter(Content.order >= new_index, Content.order < old_index, \
-                Content.playlist_id==playlist_id).update({"order": (Content.order + 1)})
-        elif(old_index < new_index):
-            session.query(Content).filter(Content.order <= new_index, Content.order > old_index, \
-                Content.playlist_id==playlist_id).update({"order": (Content.order - 1)})
+        session.execute(update(Content).where((Content.order == old_index) & (Content.playlist_id == playlist_id)).\
+            values(order = -1))
 
-        session.query(Content).filter(Content.order==-1, Content.playlist_id==playlist_id).\
-            update({"order": new_index})
+        if old_index > new_index:
+            session.execute(update(Content).where((Content.playlist_id == playlist_id) & \
+                (new_index <= Content.order) & (Content.order < old_index)).values(order = Content.order + 1))
+        elif old_index < new_index:
+            session.execute(update(Content).where((Content.playlist_id == playlist_id) & \
+                (old_index < Content.order) & (Content.order <= new_index)).values(order = Content.order - 1))
+
+        session.execute(update(Content).where((Content.order == -1) & (Content.playlist_id == playlist_id)).\
+            values(order = new_index))
+
         session.commit()
         session.close()

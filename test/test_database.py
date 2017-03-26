@@ -130,8 +130,41 @@ class TestDatabase(unittest.TestCase):
         all_songs = self.test_playlistDB.get_songs_from_playlist(test_playlist1)
         self.assertEqual(all_songs, ["song3", "song1"], "songs not ordered properly after deletion")
 
+    def test_invalid_playlist_id(self):
+        self.test_playlistDB.add_song_to_playlist(1, "song1")
+        all_songs = self.test_playlistDB.get_songs_from_playlist(1)
+
+        self.assertEqual(all_songs, [], "songs should not exist in invalid playlist")
+
+    def test_reordering_song_at_existing_to_nonexisting_indices(self):
+        test_playlist1 = self.test_playlistDB.create_playlist("test1")
+        self.test_playlistDB.add_song_to_playlist(test_playlist1, "song1")
+        self.test_playlistDB.add_song_to_playlist(test_playlist1, "song2")
+        self.test_playlistDB.reorder_songs_in_playlist(test_playlist1, 0, 2)
+
+        all_songs = self.test_playlistDB.get_songs_from_playlist(test_playlist1)
+        self.assertEqual(all_songs, ["song1", "song2"], "song moved to invalid index")
+    
+    def test_reordering_song_at_nonexisting_to_existing_indices(self):
+        test_playlist1 = self.test_playlistDB.create_playlist("test1")
+        self.test_playlistDB.add_song_to_playlist(test_playlist1, "song1")
+        self.test_playlistDB.add_song_to_playlist(test_playlist1, "song2")
+        self.test_playlistDB.reorder_songs_in_playlist(test_playlist1, 2, 0)
+
+        all_songs = self.test_playlistDB.get_songs_from_playlist(test_playlist1)
+        self.assertEqual(all_songs, ["song1", "song2"], "song moved to invalid index")
+
+    def test_deleting_from_invalid_index(self):
+        test_playlist1 = self.test_playlistDB.create_playlist("test1")
+        self.test_playlistDB.add_song_to_playlist(test_playlist1, "song1")
+        self.test_playlistDB.delete_song_from_playlist(test_playlist1, 1)
+        self.test_playlistDB.add_song_to_playlist(test_playlist1, "song2")
+
+        all_songs = self.test_playlistDB.get_songs_from_playlist(test_playlist1)
+        self.assertEqual(all_songs, ["song1", "song2"], "songs should exist")
+
     def setUp(self):
-        engine = create_engine('sqlite:///:memory:')
+        engine = create_engine('sqlite:///:memory:', echo=True)
         self.test_playlistDB = PlaylistDB(engine)
 
 if __name__ == '__main__':
