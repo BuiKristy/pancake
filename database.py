@@ -9,7 +9,6 @@ Base = declarative_base()
 @event.listens_for(Engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
-    print("hello")
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
 
@@ -98,7 +97,12 @@ class PlaylistDB:
         finally:
             session.close()
 
-    # TODO delete_song_from_playlist(index)
+    def delete_song_from_playlist(self, index, playlist_id):
+        session = self.Session()
+        session.delete(session.query(Content).filter(Content.playlist_id==playlist_id, \
+            Content.order==index).one())
+        session.query(Content).filter(Content.order > index, Content.playlist_id==playlist_id).\
+            update({"order": (Content.order - 1)})
 
     # TODO reorder_songs_in_playlist(playlist_id, old_index, new_index)
         # moves song at old index to the new index and shifts the rest of the songs down
