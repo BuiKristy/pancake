@@ -97,12 +97,29 @@ class PlaylistDB:
         finally:
             session.close()
 
-    def delete_song_from_playlist(self, index, playlist_id):
+    def delete_song_from_playlist(self, playlist_id, index):
         session = self.Session()
         session.delete(session.query(Content).filter(Content.playlist_id==playlist_id, \
             Content.order==index).one())
         session.query(Content).filter(Content.order > index, Content.playlist_id==playlist_id).\
             update({"order": (Content.order - 1)})
+        session.commit()
+        session.close()
 
-    # TODO reorder_songs_in_playlist(playlist_id, old_index, new_index)
+    def reorder_songs_in_playlist(self, playlist_id, old_index, new_index):
         # moves song at old index to the new index and shifts the rest of the songs down
+        session = self.Session()
+        session.query(Content).filter(Content.order==old_index, Content.playlist_id==playlist_id).\
+            update({"order": -1})
+
+        if(old_index > new_index):
+            session.query(Content).filter(Content.order >= new_index, Content.order < old_index, \
+                Content.playlist_id==playlist_id).update({"order": (Content.order + 1)})
+        elif(old_index < new_index):
+            session.query(Content).filter(Content.order <= new_index, Content.order > old_index, \
+                Content.playlist_id==playlist_id).update({"order": (Content.order - 1)})
+
+        session.query(Content).filter(Content.order==-1, Content.playlist_id==playlist_id).\
+            update({"order": new_index})
+        session.commit()
+        session.close()
