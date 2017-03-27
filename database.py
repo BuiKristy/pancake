@@ -139,3 +139,5 @@ class PlaylistDB:
 
         session.commit()
         session.close()
+
+DB_connection = PlaylistDB(engine)
