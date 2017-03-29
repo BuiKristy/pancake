@@ -102,10 +102,21 @@ class TestDatabase(unittest.TestCase):
         self.test_playlistDB.add_song_to_playlist(test_playlist1, "song1")
         self.test_playlistDB.add_song_to_playlist(test_playlist1, "song2")
         self.test_playlistDB.add_song_to_playlist(test_playlist1, "song3")
-        self.test_playlistDB.reorder_songs_in_playlist(test_playlist1, 1, 2)
+        self.test_playlistDB.add_song_to_playlist(test_playlist1, "song4")
+        self.test_playlistDB.reorder_songs_in_playlist(test_playlist1, 1, 3)
+        self.test_playlistDB.reorder_songs_in_playlist(test_playlist1, 0, 3)
 
         all_songs = self.test_playlistDB.get_songs_from_playlist(test_playlist1)
-        self.assertEqual(all_songs, ["song1", "song3", "song2"], "songs not ordered properly")
+        self.assertEqual(all_songs, ["song3", "song4", "song2", "song1"], "songs not ordered properly")
+
+    def test_song_reorder_song_to_0th_spot(self):
+        test_playlist1 = self.test_playlistDB.create_playlist("test1")
+        self.test_playlistDB.add_song_to_playlist(test_playlist1, "song1")
+        self.test_playlistDB.add_song_to_playlist(test_playlist1, "song2")
+        self.test_playlistDB.reorder_songs_in_playlist(test_playlist1, 1, 0)
+
+        all_songs = self.test_playlistDB.get_songs_from_playlist(test_playlist1)
+        self.assertEqual(all_songs, ["song2", "song1"], "songs not ordered properly")
 
     def test_song_reorder_a_equal_to_b(self):
         test_playlist1 = self.test_playlistDB.create_playlist("test1")
