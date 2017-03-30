@@ -2,10 +2,22 @@
 <html>
     <head>
         <title>pancake</title>
+        <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
         <script src="https://unpkg.com/vue"></script>
+        <script src="https://code.jquery.com/jquery-3.2.1.js" 
+            integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE=" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js" integrity="sha256-T0Vest3yCU7pafRw9r+settMBX6JkKN06dqBnpQ8d30="
+            crossorigin="anonymous"></script>
     </head>
 
     <body>
+        <div id="app">
+            <button v-on:click="refreshModel">refresh</button>
 
+            <playlist-item v-for="(playlist, index) in model.playlists" :key="playlist.id" v-bind:playlist-info="playlist" 
+                v-on:sortable-change="localChangeSong" v-bind:index="index"></playlist-item>
+        </div>
+
+        <script src="static/app.js"></script>
     </body>
 </html>
