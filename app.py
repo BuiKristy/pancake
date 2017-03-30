@@ -1,4 +1,4 @@
-from flask import Flask, render_template, send_file, request, redirect, url_for
+from flask import Flask, render_template, send_file, request, redirect, url_for, abort
 from mutagen import File
 from io import BytesIO
 from database import DB_connection
@@ -48,7 +48,6 @@ def get_json_model():
         playlist_map['songs'] = DB_connection.get_songs_from_playlist(playlist_id)
         model['playlists'].append(playlist_map)
     
-    print(model)
     return json.dumps(model)
     
 @app.route('/playlists', methods=['POST', 'GET'])
@@ -88,11 +87,11 @@ def modify_song(playlist_id, song_index):
         elif request.method == 'GET':
             return DB_connection.get_songs_from_playlist(playlist_id)[song_index]
         elif request.method == 'PATCH':
-            new_index = request.form['new_index']
             try:
+                new_index = int(request.form['new_index'])
                 if 0 <= new_index < length:
                     DB_connection.reorder_songs_in_playlist(playlist_id, song_index, \
-                        request.form['new_index'])
+                        new_index)
                     return "", 204
                 else:
                     abort(404)
@@ -103,5 +102,4 @@ def modify_song(playlist_id, song_index):
 
 @app.route('/')
 def show_app():
-    path = r"music"
-    return render_template("app.html", playlists=DB_connection.get_playlists(), songs=os.listdir(path))
+    return app.send_static_file("app.html")
