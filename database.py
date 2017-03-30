@@ -116,6 +116,9 @@ class PlaylistDB:
 
     def reorder_songs_in_playlist(self, playlist_id, old_index, new_index):
         """ Moves the song at the given old index to the new index in the playlist given the playlist id """
+        if old_index == new_index:
+            return
+
         session = self.Session()
         song_count = session.query(func.count(Content.order)).filter(Content.playlist_id == playlist_id).scalar()
         
@@ -125,17 +128,17 @@ class PlaylistDB:
             return
 
         session.execute(update(Content).where((Content.order == old_index) & (Content.playlist_id == playlist_id)).\
-            values(order = -1))
+            values(order = -(new_index) - 1))
 
         if old_index > new_index:
             session.execute(update(Content).where((Content.playlist_id == playlist_id) & \
-                (new_index <= Content.order) & (Content.order < old_index)).values(order = Content.order + 1))
+                (new_index <= Content.order) & (Content.order < old_index)).values(order = -(Content.order + 1) - 1))
         elif old_index < new_index:
             session.execute(update(Content).where((Content.playlist_id == playlist_id) & \
-                (old_index < Content.order) & (Content.order <= new_index)).values(order = Content.order - 1))
+                (old_index < Content.order) & (Content.order <= new_index)).values(order = -(Content.order - 1) - 1))
 
-        session.execute(update(Content).where((Content.order == -1) & (Content.playlist_id == playlist_id)).\
-            values(order = new_index))
+        session.execute(update(Content).where((Content.order < 0) & (Content.playlist_id == playlist_id)).\
+            values(order = -(Content.order + 1)))
 
         session.commit()
         session.close()
