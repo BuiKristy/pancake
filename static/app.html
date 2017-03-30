@@ -15,7 +15,7 @@
             <button v-on:click="refreshModel">refresh</button>
 
             <playlist-item v-for="(playlist, index) in model.playlists" :key="playlist.id" v-bind:playlist-info="playlist" 
-                v-on:sortable-change="localChangeSong" v-bind:index="index"></playlist-item>
+                v-on:sortable-change="localChangeSong" v-on:edit-playlist="localChangeName" v-bind:index="index"></playlist-item>
         </div>
 
         <script src="static/app.js"></script>
