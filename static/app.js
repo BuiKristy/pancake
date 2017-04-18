@@ -1,37 +1,10 @@
-/*Vue.directive('sortable', {
-    inserted: function(el, binding) {
-        $(el).sortable({
-            axis: "y", 
-            containment: "parent", 
-            tolerance: "pointer",
-            stop: function(event, ui) {
-                console.log($(el).children().toArray().map(function(value) {
-                    return value.innerText;
-                }));
-            }
-        });
-        $(el).disableSelection();
-    },
-
-    bind: function() {
-        console.log(this);
-    },
-
-    componentUpdated: function(el) {
-        $(el).sortable("refresh");
-        console.log(el);
-    }
-})*/
-
-var store = {
-
-}
-
 var app = new Vue ({
     el: "#app",
     data: {
-        model: {"playlists": []}
+        model: {"playlists": []},
+        songs: {}
     },
+
     methods: {
         refreshModel: function() {
             app_ref = this;
@@ -47,7 +20,7 @@ var app = new Vue ({
                 method: 'PATCH',
                 url: '/playlists/' + this.model.playlists[index].id + '/' + start_index,
                 data: {new_index: end_index}
-            }).done(this.refreshModel)
+            }).done(this.refreshModel);
         },
 
         localChangeName: function(index, new_name) {
@@ -57,9 +30,34 @@ var app = new Vue ({
                 method: 'PATCH',
                 url: '/playlists/' + this.model.playlists[index].id,
                 data: {playlist_name: new_name}
-            }).done(function() {
-                console.log("renamed playlist");
+            }).done(this.refreshModel);
+        },
+
+        localGetSongs: function() {
+            app_ref = this;
+            var songs = $.getJSON("/list").done(function(data) {
+                app_ref.songs = data;
             })
+        },
+
+        localAddSong: function(index, song_to_add) {
+            this.model.playlists[index].songs.push(song_to_add);
+            
+            $.ajax({
+                method: 'POST',
+                url: '/playlists/' + this.model.playlists[index].id,
+                data: {song: song_to_add}
+            }).done(this.refreshModel);
+        }
+    }
+})
+
+Vue.component('song-item', {
+    props: ['song', 'index'],
+    template: '<li draggable="true" v-on:dragstart="drag">{{ song }}</li>',
+    methods: {
+        drag: function(event) {
+            event.dataTransfer.setData("draggedSong", this.song);
         }
     }
 })
@@ -68,13 +66,14 @@ Vue.component('playlist-item', {
     props: ['playlistInfo', 'index'],
     computed: {
         ul_id : function() {
-            return 'playlist' + this.playlistInfo.id
+            return 'playlist' + this.playlistInfo.id;
         }
     },
-    template: '<div><h3 v-if="!editing">{{ playlistInfo.name }}</h3> <input v-else v-bind:value="playlistInfo.name" v-on:input="namePlaylist"> <button v-on:click="editPlaylistName"></button> <sortable v-on:sortable-change="echo"' +
-        'v-bind:song-list="playlistInfo.songs"></sortable></div>',
+    template: `<div><h3 v-if="!editing">{{ playlistInfo.name }}</h3> <input v-else v-bind:value="playlistInfo.name"
+        v-on:input="namePlaylist"> <button v-on:click="editPlaylistName"></button> <sortable :id="ul_id" v-on:sortable-change="sortableChange"
+        v-bind:song-list="playlistInfo.songs" v-on:sortable-add="sortableAdd"></sortable></div>`,
     methods:  {
-        echo: function(arr, start_index, end_index) {
+        sortableChange: function(arr, start_index, end_index) {
             this.$emit('sortable-change', this.index, arr, start_index, end_index);
         },
 
@@ -84,6 +83,10 @@ Vue.component('playlist-item', {
 
         namePlaylist: function(new_name) {
             this.$emit('edit-playlist', this.index, new_name.target.value)
+        },
+
+        sortableAdd: function(song_to_add) {
+            this.$emit('sortable-add', this.index, song_to_add);
         }
     },
     data: function() {
@@ -95,7 +98,7 @@ Vue.component('playlist-item', {
 
 Vue.component('sortable', {
     props: ['songList'],
-    template: '<ul><li v-for="song in songList">{{ song }}</li></ul>',
+    template: `<ul v-on:drop="drop" v-on:dragover="allowDrop"><li v-for="song in songList">{{ song }}</li></ul>`,
     mounted: function() {
         var vm = this;
         $(this.$el)
@@ -117,9 +120,16 @@ Vue.component('sortable', {
                 }
             })
             .disableSelection();
+    },
+    methods: {
+        drop: function(ev) {
+            ev.preventDefault();
+            var data = ev.dataTransfer.getData("draggedSong");
+            this.$emit('sortable-add', data);
+        },
+
+        allowDrop: function(event) {
+            event.preventDefault();
+        }
     }
 })
-
-$(function() {
-
-});
