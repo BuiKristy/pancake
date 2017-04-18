@@ -15,7 +15,8 @@ def list_music():
     for song in os.listdir(path):
         result.append(song)
 
-    return render_template("list.html", list=result)
+    #return render_template("list.html", list=result)
+    return json.dumps(result)
 
 @app.route('/picture/<song_name>')
 def get_picture(song_name):
