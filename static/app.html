@@ -16,7 +16,7 @@
 
             <playlist-item v-for="(playlist, index) in model.playlists" :key="playlist.id" v-bind:playlist-info="playlist" 
                 v-on:sortable-change="localChangeSong" v-on:edit-playlist="localChangeName" v-bind:index="index"
-                v-on:sortable-add="localAddSong"></playlist-item>
+                v-on:sortable-add="localAddSong" v-on:sortable-delete="localDeleteSong"></playlist-item>
             <button v-on:click="localGetSongs">songs</button>
             <ul><song-item v-for="(song, index) in songs" :key="song" v-bind:song="song" v-bind:index="index" ></song-item></ul>
         </div>

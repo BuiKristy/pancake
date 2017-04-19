@@ -48,6 +48,15 @@ var app = new Vue ({
                 url: '/playlists/' + this.model.playlists[index].id,
                 data: {song: song_to_add}
             }).done(this.refreshModel);
+        },
+
+        localDeleteSong: function(playlist_index, song_index) {
+            this.model.playlists[playlist_index].songs.splice(song_index, 1);
+
+            $.ajax({
+                method: 'DELETE',
+                url: '/playlists/' + this.model.playlists[playlist_index].id + '/' + song_index
+            }).done(this.refreshModel);
         }
     }
 })
@@ -65,13 +74,13 @@ Vue.component('song-item', {
 Vue.component('playlist-item', {
     props: ['playlistInfo', 'index'],
     computed: {
-        ul_id : function() {
+        ul_id: function() {
             return 'playlist' + this.playlistInfo.id;
         }
     },
     template: `<div><h3 v-if="!editing">{{ playlistInfo.name }}</h3> <input v-else v-bind:value="playlistInfo.name"
         v-on:input="namePlaylist"> <button v-on:click="editPlaylistName"></button> <sortable :id="ul_id" v-on:sortable-change="sortableChange"
-        v-bind:song-list="playlistInfo.songs" v-on:sortable-add="sortableAdd"></sortable></div>`,
+        v-bind:song-list="playlistInfo.songs" v-on:sortable-add="sortableAdd" v-on:sortable-delete="sortableDelete"></sortable></div>`,
     methods:  {
         sortableChange: function(arr, start_index, end_index) {
             this.$emit('sortable-change', this.index, arr, start_index, end_index);
@@ -87,6 +96,10 @@ Vue.component('playlist-item', {
 
         sortableAdd: function(song_to_add) {
             this.$emit('sortable-add', this.index, song_to_add);
+        },
+
+        sortableDelete: function(index) {
+            this.$emit('sortable-delete', this.index, index);
         }
     },
     data: function() {
@@ -96,9 +109,20 @@ Vue.component('playlist-item', {
     }
 })
 
+Vue.component('sortable-item', {
+    props: ['song', 'index'],
+    template: `<li>{{ song }} <img src="/static/delete.png" v-on:click="sortableDelete" /></li>`,
+    methods: {
+        sortableDelete: function() {
+            this.$emit('sortable-delete', this.index);
+        }
+    }
+})
+
 Vue.component('sortable', {
     props: ['songList'],
-    template: `<ul v-on:drop="drop" v-on:dragover="allowDrop"><li v-for="song in songList">{{ song }}</li></ul>`,
+    template: `<ul v-on:drop="drop" v-on:dragover="allowDrop"><sortable-item v-for="(song, index) in songList" :key="index"
+            v-bind:song="song" v-bind:index="index" v-on:sortable-delete="sortableDelete"></sortable-item></ul>`,
     mounted: function() {
         var vm = this;
         $(this.$el)
@@ -130,6 +154,10 @@ Vue.component('sortable', {
 
         allowDrop: function(event) {
             event.preventDefault();
+        },
+
+        sortableDelete: function(index) {
+            this.$emit('sortable-delete', index);
         }
     }
 })
