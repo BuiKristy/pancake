@@ -87,6 +87,17 @@ class TestDatabase(unittest.TestCase):
         all_songs = self.test_playlistDB.get_songs_from_playlist(test_playlist1)
         self.assertEqual(all_songs, ["song1", "song3"], "song did not get deleted")
 
+    def test_reorder_then_delete_songs(self): 
+        test_playlist1 = self.test_playlistDB.create_playlist("test1")
+        self.test_playlistDB.add_song_to_playlist(test_playlist1, "song1")
+        self.test_playlistDB.add_song_to_playlist(test_playlist1, "song2")
+        self.test_playlistDB.add_song_to_playlist(test_playlist1, "song3")
+        self.test_playlistDB.reorder_songs_in_playlist(test_playlist1, 0, 2)
+        self.test_playlistDB.delete_song_from_playlist(test_playlist1, 0)
+
+        all_songs = self.test_playlistDB.get_songs_from_playlist(test_playlist1)
+        self.assertEqual(all_songs, ["song3", "song1"], "reordered song did not get deleted properly")
+
     def test_song_reorder_a_less_than_b(self):
         test_playlist1 = self.test_playlistDB.create_playlist("test1")
         self.test_playlistDB.add_song_to_playlist(test_playlist1, "song1")

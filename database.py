@@ -107,9 +107,12 @@ class PlaylistDB:
             session.delete(session.query(Content).filter(Content.playlist_id == playlist_id, \
                 Content.order == index).one())
             session.query(Content).filter(Content.order > index, Content.playlist_id == playlist_id).\
-                update({"order": (Content.order - 1)})
+                update({"order": -(Content.order - 1)}, synchronize_session='fetch')
+            session.query(Content).filter(Content.order < 0, Content.playlist_id == playlist_id).\
+                update({"order": -Content.order}, synchronize_session='fetch')
             session.commit()
-        except:
+        except Exception as e:
+            print("this exception: ", e)
             session.rollback()
         finally:
             session.close()
